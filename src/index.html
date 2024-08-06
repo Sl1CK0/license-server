@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Redis Keys and Create/Delete License</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Table styles */
+        table {
+            width: 60%;
+            /* Adjust width as per your requirement */
+            border-collapse: collapse;
+            margin: 20px auto;
+            table-layout: fixed;
+            /* Ensure fixed layout for consistent column width */
+            overflow-x: auto;
+            /* Enable horizontal scrolling */
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            white-space: nowrap;
+            /* Prevent text wrapping */
+            overflow: hidden;
+            /* Hide overflow content */
+            text-overflow: ellipsis;
+            /* Show ellipsis for truncated text */
+        }
+
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        th.serial-number {
+            width: 2%;
+            /* Serial Number column width */
+        }
+
+        th.action-keys {
+            width: 12%;
+            /* Action Keys column width */
+        }
+
+        th.license-key {
+            width: 46%;
+            /* License Key column width */
+        }
+
+        /* Button container styles */
+        .button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logout-btn {
+            width: 80%;
+            text-emphasis-color: black;
+            border: none;
+            background-color: white;
+            color: rgb(26, 24, 24);
+            text-align: center;
+        }
+
+        .sidepanel {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            text-align: center;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 1s;
+            padding-top: 60px;
+            padding-left: 0px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+        }
+        .sidepanel a{
+            transition: 0.2s;
+        }
+
+        .sidepanel .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            text-decoration: none;
+            color: #ddd;
+
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+
+            color: rgb(0, 0, 0);
+            padding: 10px 15px;
+            border: none;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        h1 {
+            font-size: 2.8vw;
+            text-align: center;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav">
+
+        <button class="openbtn" onclick="openNav()">☰</button>
+
+        <h1 class="center">
+            License Manager
+        </h1>
+
+        <div id="mySidepanel" class="sidepanel">
+            <a><a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+            <h2>user: <span id="username"></span>!</h2>
+            <p>User ID: <span id="userId"></span></p>
+            <!-- <p>pass: <span id="password"></span></p> -->
+            <button class="logout-btn" onclick="logout()">Logout</button></a>
+        </div>
+
+    </nav>
+
+    <script>
+        function logout() {
+            // Implement logout functionality here, e.g., redirect to logout route
+            window.location.href = '/logout';
+        }
+        function openNav() {
+            document.getElementById("mySidepanel").style.width = "250px";
+        }
+
+        function closeNav() {
+            document.getElementById("mySidepanel").style.width = "0";
+        }
+        // Fetch user information from server
+        fetch('/user')
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('username').textContent = user.username;
+                document.getElementById('userId').textContent = user.id;
+            })
+            .catch(error => console.error('Error fetching user:', error));
+    </script>
+
+    <div class="button-container">
+        <button onclick="showTable()">Display Keys</button>
+        <!-- <button onclick="hideTable()">Hide Keys</button> -->
+        <button onclick="refreshTable()">Refresh</button>
+        <button onclick="createLicense()">Create License</button>
+        <button onclick="deleteAllKeys()">Delete All Keys</button> <!-- New button for deleting all keys -->
+    </div>
+    <table id="keysTable">
+        <thead>
+            <tr>
+                <th class="serial-number">S.no</th>
+                <th class="license-key">License Key</th>
+                <th class="action-keys">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be added dynamically here -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchRedisKeys() {
+            try {
+                const response = await fetch('http://localhost:3002/api/redis/keys');
+                const data = await response.json();
+
+                if (response.ok) {
+                    const keys = data.keys;
+                    const keysTable = document.getElementById('keysTable').getElementsByTagName('tbody')[0];
+                    keysTable.innerHTML = '';
+
+                    keys.forEach((key, index) => {
+                        const row = keysTable.insertRow();
+                        const cellSerial = row.insertCell();
+                        const cellLicenseKey = row.insertCell();
+                        const cellActions = row.insertCell();
+
+                        cellSerial.textContent = index + 1;
+                        cellSerial.className = 'serial-number'; // Set class for serial number column
+
+                        cellLicenseKey.textContent = key;
+                        cellLicenseKey.className = 'license-key'; // Set class for license key column
+                        cellLicenseKey.title = key; // Show full key name on hover
+
+                        // Create copy button
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = 'Copy Key';
+                        copyButton.onclick = function () {
+                            copyToClipboard(key);
+                        };
+                        cellActions.appendChild(copyButton);
+
+                        // Create delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = function () {
+                            deleteKey(key);
+                        };
+                        cellActions.appendChild(deleteButton);
+                    });
+
+                    document.getElementById('keysTable').style.display = 'table';
+                } else {
+                    console.error('Failed to fetch Redis keys:', data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching Redis keys:', error);
+            }
+        }
+
+        function showTable() {
+            fetchRedisKeys();
+            document.getElementById('keysTable').style.display = 'table';
+        }
+
+        // function hideTable() {
+        //     document.getElementById('keysTable').style.display = 'none';
+        // }
+
+        function refreshTable() {
+            window.location.reload();
+        }
+
+        async function createLicense() {
+            try {
+                const response = await fetch('http://localhost:3002/api/create-license', {
+                    method: 'POST',
+                });
+
+                const text = await response.text();
+                console.log('Raw response:', text);
+
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('License created:', data);
+                        alert('License created successfully!');
+                    } catch (e) {
+                        console.log('License created:', text);
+                        alert('License created successfully!');
+                    }
+                } else {
+                    console.error('Failed to create license:', text);
+                    alert('Failed to create license: ' + text);
+                }
+            } catch (error) {
+                console.error('Error creating license:', error);
+                alert('Error creating license: ' + error.message);
+            }
+        }
+
+        async function deleteKey(keyName) {
+            try {
+                const response = await fetch(`http://localhost:3002/api/redis/keys/${encodeURIComponent(keyName)}`, {
+                    method: 'DELETE',
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    console.log(`Deleted key "${keyName}" successfully`);
+                    fetchRedisKeys(); // Refresh the table after deletion
+                    alert(`Deleted key "${keyName}" successfully`);
+                } else {
+                    console.error(`Failed to delete key "${keyName}":`, data.error);
+                    alert(`Failed to delete key "${keyName}": ${data.error}`);
+                }
+            } catch (error) {
+                console.error(`Error deleting key "${keyName}":`, error);
+                alert(`Error deleting key "${keyName}": ${error.message}`);
+            }
+        }
+
+        async function deleteAllKeys() {
+            if (confirm("Are you sure you want to delete all keys? This action cannot be undone.")) {
+                try {
+                    const response = await fetch('http://localhost:3002/api/redis/keys', {
+                        method: 'DELETE',
+                    });
+
+                    // Check if response is ok before parsing JSON
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    // Read the response text
+                    const text = await response.text();
+                    console.log('Response:', text);
+
+                    // Handle the response as JSON if possible
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Parsed JSON:', data);
+
+                        if (data.message) {
+                            alert(data.message); // Display any message from the server
+                        }
+
+                        fetchRedisKeys(); // Refresh the table after deletion
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        alert('Error parsing JSON: ' + error.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting all keys:', error);
+                    alert('Error deleting all keys: ' + error.message);
+                }
+            }
+        }
+
+        function copyToClipboard(text) {
+            // Remove the prefix "license-server-data:LicenseKey:" if present
+            const prefix = 'license-server-data:LicenseKey:';
+            const cleanedText = text.startsWith(prefix) ? text.substring(prefix.length) : text;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = cleanedText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert(`Copied key "${cleanedText}" to clipboard`);
+        }
+        showTable();
+    </script>
+</body>
+
+</html>

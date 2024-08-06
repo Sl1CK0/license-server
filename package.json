@@ -1,0 +1,58 @@
+{
+  "name": "license-server",
+  "version": "0.0.5",
+  "description": "license-server implementation for software licensing",
+  "main": "./src/server.js",
+  "scripts": {
+    "lint": "eslint --plugin markdown --ext js,md .",
+    "start": "node ./src/server.js",
+    "test": "mocha --check-leaks --bail --no-exit --reporter spec test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --check-leaks --no-exit --reporter dot test/",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --check-leaks --no-exit --reporter spec test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devfans/node-license-server.git"
+  },
+  "keywords": [
+    "license",
+    "server",
+    "node",
+    "software",
+    "licensing",
+    "permission"
+  ],
+  "author": "stefanliu@outlook.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/devfans/node-license-server/issues"
+  },
+  "devDependencies": {
+    "after": "0.8.2",
+    "eslint": "^5.16.0",
+    "eslint-plugin-markdown": "^1.0.0",
+    "istanbul": "1.0.0-alpha.2",
+    "machine-digest": "^0.0.3",
+    "mocha": "^6.1.4",
+    "node-fetch": "^2.1.2",
+    "supertest": "^4.0.2"
+  },
+  "homepage": "https://github.com/devfans/node-license-server#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "connect-redis": "^7.1.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "redis": "^3.1.2",
+    "redis-async-wrapper": "0.0.5",
+    "winston": "^3.0.0-rc5"
+  },
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  }
+}
