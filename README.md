@@ -24,10 +24,6 @@ The licensing server will generate client software license to permit client soft
 4. License server binds the key with the machine uuid, and generate a license file with RSA private key.
 5. Client software saves the license file locally and verifys license with server's RSA public key. Client software can also set a daily timer to check the expiration of the key.
 
-## Client module: node-license-client
-
-[node-license-client](https://github.com/devfans/node-license-client) is a nodejs implementation client module for node-license-server.
-
 ## Generate RSA Keys
 
 ```
