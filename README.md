@@ -8,7 +8,6 @@ client software licensing server
 
 ## Get Started
 ```
-git clone https://github.com/devfans/node-license-server.git
 cd node-license-server
 npm start
 
