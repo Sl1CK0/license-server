@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Server</title>
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        body {
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            font-family: monospace, Arial, Helvetica, sans-serif;
+            color: white;
+            background: linear-gradient(-135deg, #00102F, #002a79);
+            background-size: 400% 400%;
+            animation: gradient 10s ease infinite;
+        }
+
+
+        /* Table styles */
+        table {
+            width: 79%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.2);
+            overflow-x: auto;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: white;
+            color: #03045e;
+        }
+
+        td {
+            text-overflow: ellipsis;
+        }
+
+        th.serial-number {
+            width: 2%;
+            border-radius: 10px 0 0 0;
+        }
+
+        th.action-keys {
+            width: 13%;
+            border-radius: 0 10px 0 0;
+        }
+
+        th.license-key {
+            width: 41%;
+        }
+
+        th.status,
+        th.issue-date,
+        th.start-date,
+        th.end-date {
+            width: 6%;
+        }
+
+        .status-active,
+        .status-used .status-inactive {
+            font-weight: bold;
+        }
+
+        .status-active {
+            color: rgb(170, 255, 0);
+        }
+
+        .status-used {
+            color: turquoise;
+        }
+
+        .status-expired {
+            color: #696969;
+        }
+
+        .status-inactive {
+            color: yellow;
+        }
+
+        .license-key-active {
+            color: rgb(170, 255, 0);
+        }
+
+        .license-key-used {
+            color: turquoise;
+        }
+
+        .license-key-inactive {
+            color: yellow;
+        }
+
+        .license-key-expired {
+            color: #696969;
+        }
+
+        /* Button styles */
+        button {
+            color: #00102F;
+            margin: 0 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 10px;
+            border: none;
+            background-color: white;
+        }
+
+        button:hover {
+            background-color: #00102F;
+            color: #caf0f8;
+
+        }
+
+        /* Logout button */
+        .logout-btn {
+            width: 80%;
+            text-align: center;
+            color: rgb(26, 24, 24);
+        }
+
+        /* Side panel */
+        .sidepanel {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111111;
+            overflow-x: hidden;
+            transition: 1s;
+            padding-top: 60px;
+            color: #cecbcb;
+        }
+
+        .sidepanel a {
+            transition: 0.2s;
+        }
+
+        .sidepanel .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            color: #ddd;
+            text-decoration: none;
+        }
+
+        .sidepanel .closebtn:hover {
+            color: red;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            color: rgb(0, 0, 0);
+            padding: 10px 15px;
+            border: none;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .modal-content {
+            background-color: #00102F;
+            margin: 15% auto;
+            padding: 20px;
+            border: 2px dotted #888;
+            width: 30%;
+            height: 30%;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 30px;
+            font-weight: bold;
+
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: rgb(235, 52, 52);
+
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Keyframe animations */
+        @keyframes rainbowHighlight {
+            0% {
+                background-position: 0% 0%;
+            }
+
+            50% {
+                background-position: 100% 0%;
+            }
+
+            100% {
+                background-position: 0% 100%;
+            }
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .row-expired {
+            color: #696969;
+            font-style: italic;
+            /* Grey text color */
+        }
+
+        .row-active {
+            font-weight: bolder;
+        }
+
+        .row-expired button {
+            background-color: #7c7c7c;
+            border: none;
+            cursor: not-allowed;
+
+        }
+
+        .row-inactive {
+            font-style: italic;
+        }
+
+        .row-inuse {
+            font-weight: bold;
+        }
+
+        .modal-title {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue';
+            margin-bottom: 3.3vh;
+            font-style: normal;
+            font-family: cursive;
+            font-weight: bolder;
+        }
+
+        /* Miscellaneous styles */
+        h1 {
+            font-size: 2.8vw;
+            text-align: center;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .key {
+            padding: 5px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+        }
+
+        #licencename :placeholder {
+            color: red;
+        }
+
+        .row-expired button:disabled {
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav">
+
+        <button class="openbtn" onclick="openNav()">☰</button>
+
+        <h1 class="center">
+            License Manager
+        </h1>
+
+        <div id="mySidepanel" class="sidepanel">
+            <a><a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+                <h2>Hello <span id="username"></span>!</h2>
+                <p>User ID: <span id="userId"></span></p>
+                <!-- <p>pass: <span id="password"></span></p> -->
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </a>
+        </div>
+
+    </nav>
+    <!--script for navbar and user-->
+    <script>
+        function logout() {
+            // Implement logout functionality here, e.g., redirect to logout route
+            window.location.href = '/logout';
+        }
+        function openNav() {
+            document.getElementById("mySidepanel").style.width = "250px";
+        }
+        function closeNav() {
+            document.getElementById("mySidepanel").style.width = "0";
+        }
+        // Fetch user information from server
+        fetch('/user')
+            .then(response => response.json())
+            .then(user => {
+                document.getElementById('username').textContent = user.username;
+                document.getElementById('userId').textContent = user.id;
+            })
+            .catch(error => console.error('Error fetching user:', error));
+    </script>
+
+    <div class="button-container">
+        <button onclick="createLicense()">Create License</button>
+        <button onclick="deleteAllKeys()">Delete All Keys</button>
+
+    </div>
+    <!-- Add this to your HTML body -->
+    <div id="licenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeLicenseForm()">&times;</span>
+            <h2 class="modal-title">Enter Details</h2>
+            <form id="licenseForm">
+                <label for="licenseName">License Name:</label>
+                <input type="text" id="licenseName" value="LCT" disabled name="licenseName" required><br><br>
+
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" min="today" name="startDate" required><br><br>
+
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" min="today" name="endDate" required><br><br>
+
+                <label for="persist">Persist:</label>
+                <input type="checkbox" id="persist" name="persist"><br><br>
+
+                <button type="submit" onclick="submitLicenseForm(event)">Create License</button>
+            </form>
+        </div>
+    </div>
+    <script>document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    
+        // Set the min attribute for startDate and endDate
+        document.getElementById('startDate').setAttribute('min', today);
+        document.getElementById('endDate').setAttribute('min', today);
+    
+        // Optionally, you can also set the startDate's min date to the same as the endDate's min date if needed
+        document.getElementById('endDate').addEventListener('change', function() {
+            const startDate = document.getElementById('startDate');
+            if (new Date(this.value) > new Date(startDate.value)) {
+                startDate.setAttribute('max', this.value);
+            }
+        });
+    
+        document.getElementById('startDate').addEventListener('change', function() {
+            const endDate = document.getElementById('endDate');
+            if (new Date(this.value) > new Date(endDate.value)) {
+                endDate.setAttribute('min', this.value);
+            }
+        });
+    });
+    </script>
+
+    <table id="keysTable">
+        <thead>
+            <tr>
+                <th class="serial-number">S.no</th>
+                <th class="license-key">License Key</th>
+                <th class="issue-date">Issue Date</th>
+                <th class="start-date">Start Date</th>
+                <th class="end-date">End Date</th>
+                <th class="status">status</th>
+                <th class="action-keys">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be added dynamically here -->
+        </tbody>
+    </table>
+
+    <script>
+        function formatDate(timestamps) {
+            // Parse the input string into a Date object
+            const date = new Date(Number(timestamps));
+            console.log("date is", date, timestamps)
+            // Check if the date is valid
+            if (!date.getTime()) {
+                return {
+                    error: 'Invalid date format'
+                };
+            }
+
+            // Convert to Unix and Epoch timestamps
+            let year = date.getFullYear();
+            let month = date.getMonth();
+            let day = date.getDate();
+            return `${day}-${month + 1}-${year}`;
+
+        }
+        async function fetchRedisKeys() {
+            try {
+                const response = await fetch('http://localhost:3002/api/redis/keys');
+                const data = await response.json();
+                console.log("data", data);
+
+                if (response.ok) {
+                    const keys = data.keys || [];
+                    const keysTable = document.getElementById('keysTable').getElementsByTagName('tbody')[0];
+                    keysTable.innerHTML = '';  // Clear existing rows
+
+                    const currentDate = new Date().getTime(); // Get the current timestamp
+                    const ping = formatDate(currentDate);
+
+                    keys.forEach((keyData, index) => {
+                        const row = keysTable.insertRow();
+                        const cellSerial = row.insertCell();
+                        const cellLicenseKey = row.insertCell();
+                        const cellIssueDate = row.insertCell();
+                        const cellStartDate = row.insertCell();
+                        const cellEndDate = row.insertCell();
+                        const cellStatus = row.insertCell();
+                        const cellActions = row.insertCell();
+
+                        // Set serial number
+                        cellSerial.textContent = index + 1;
+                        cellSerial.className = 'serial-number';
+
+                        let keyClass = '';
+
+                        if (keyData.endDate < currentDate) {
+                            keyClass = 'license-key-expired';
+                            row.classList.add('row-expired');
+                        } else if (keyData.startDate > currentDate) {
+                            keyClass = 'license-key-inactive';
+                            row.classList.add('row-inactive');
+                        } else if (keyData.hasMachine) {
+                            keyClass = 'license-key-used';
+                            row.classList.add('row-inuse');
+                        } else {
+                            keyClass = 'license-key-active';
+                            row.classList.add('row-active');
+
+
+                        }
+                        // Set license key with highlighting if needed
+                        cellLicenseKey.textContent = keyData.key;
+                        cellLicenseKey.className = `license-key ${keyClass}`;
+                        cellLicenseKey.title = keyData.key;
+
+                        // Convert and display timestamps
+                        const issueDateFormatted = formatDate(keyData.issueDate);
+                        const startDateFormatted = formatDate(keyData.startDate);
+                        const endDateFormatted = formatDate(keyData.endDate);
+                        console.log("bih", startDateFormatted);
+                        console.log("bia", currentDate);
+                        console.log("big", ping);
+                        console.log("hi", ping < startDateFormatted);
+
+                        cellIssueDate.textContent = issueDateFormatted;
+                        cellStartDate.textContent = startDateFormatted;
+                        cellEndDate.textContent = endDateFormatted;
+
+                        // Determine and display status
+                        let statusText = '';
+                        let statusClass = '';
+                        if (startDateFormatted > ping) {
+                            statusText = 'Inactive';
+                            statusClass = 'status-inactive';
+                        } else if (keyData.endDate < currentDate) {
+                            statusText = 'Expired';
+                            statusClass = 'status-expired';
+                        } else if (keyData.hasMachine) {
+                            statusText = 'In Use';
+                            statusClass = 'status-used';
+                        } else {
+                            statusText = 'Active';
+                            statusClass = 'status-active';
+                        }
+
+                        cellStatus.textContent = statusText;
+                        cellStatus.className = statusClass;
+
+                        // Create and append the copy button
+                        const copyButton = document.createElement('button');
+                        copyButton.textContent = 'Copy Key';
+                        copyButton.onclick = () => copyToClipboard(keyData.key);
+                        cellActions.appendChild(copyButton);
+
+                        // Create and append the delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = () => deleteKey(keyData.key);
+                        cellActions.appendChild(deleteButton);
+                    });
+
+                    // Display the table
+                    document.getElementById('keysTable').style.display = 'table';
+                } else {
+                    console.error('Failed to fetch Redis keys:', data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching Redis keys:', error);
+            }
+        }
+
+        function showTable() {
+            fetchRedisKeys();
+            document.getElementById('keysTable').style.display = 'table';
+        }
+
+        // function hideTable() {
+        //     document.getElementById('keysTable').style.display = 'none';
+        // }
+        async function createLicense() {
+            try {
+                const response = await fetch('http://localhost:3002/api/create-license', {
+                    method: 'POST',
+                });
+
+                const text = await response.text();
+                console.log('Raw response:', text);
+
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('License created:', data);
+                        window.location.reload();
+                    } catch (e) {
+                        console.log('License created:', text);
+                        alert('License created successfully!');
+                    }
+                } else {
+                    console.error('Failed to create license:', text);
+                    alert('Failed to create license: ' + text);
+                }
+            } catch (error) {
+                console.error('Error creating license:', error);
+                alert('Error creating license: ' + error.message);
+            }
+        }
+        // Function to open the modal
+        function openLicenseForm() {
+            document.getElementById('licenseModal').style.display = 'block';
+        }
+
+        // Function to close the modal
+        function closeLicenseForm() {
+            document.getElementById('licenseModal').style.display = 'none';
+        }
+
+        // Submit function with form handling
+        async function submitLicenseForm(event) {
+            event.preventDefault();
+
+            const licenseName = document.getElementById('licenseName').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const persist = document.getElementById('persist').checked;
+
+            const startDateTimestamp = new Date(startDate).getTime();
+            const endDateTimestamp = new Date(endDate).getTime();
+            const currentDateTimestamp = Date.now();
+
+            if (startDateTimestamp < currentDateTimestamp) {
+                alert("Start date cannot be less than the current date.");
+                return;
+            }
+            if (endDateTimestamp < currentDateTimestamp) {
+                alert("End date cannot be less than the current date.");
+                return;
+            }
+            if (endDateTimestamp < startDateTimestamp) {
+                alert("End date cannot be earlier than the start date.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3002/api/create-license', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: licenseName,
+                        startDate: startDateTimestamp,
+                        endDate: endDateTimestamp,
+                        persist: persist
+                    })
+                });
+
+                const text = await response.text();
+                console.log('Raw response:', text);
+
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('License created:', data);
+                        fetchRedisKeys(); // Refresh the table after creation
+                    } catch (e) {
+                        console.log('License created:', text);
+                    }
+                    closeLicenseForm();
+                } else {
+                    console.error('Failed to create license:', text);
+                    alert('Failed to create license: ' + text);
+                }
+            } catch (error) {
+                console.error('Error creating license:', error);
+                alert('Error creating license: ' + error.message);
+            }
+        }
+
+        async function deleteKey(keyName) {
+            try {
+                const response = await fetch(`http://localhost:3002/api/redis/keys/${encodeURIComponent(keyName)}`, {
+                    method: 'DELETE',
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    console.log(`Deleted key "${keyName}" successfully`);
+                    fetchRedisKeys(); // Refresh the table after deletion
+                    alert(`Deleted key "${keyName}" successfully`);
+                } else {
+                    console.error(`Failed to delete key "${keyName}":`, data.error);
+                    alert(`Failed to delete key "${keyName}": ${data.error}`);
+                }
+            } catch (error) {
+                console.error(`Error deleting key "${keyName}":`, error);
+                alert(`Error deleting key "${keyName}": ${error.message}`);
+            }
+        }
+
+        async function deleteAllKeys() {
+            if (confirm("Are you sure you want to delete all keys? This action cannot be undone.")) {
+                try {
+                    const response = await fetch('http://localhost:3002/api/redis/keys', {
+                        method: 'DELETE',
+                    });
+
+                    // Check if response is ok before parsing JSON
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    // Read the response text
+                    const text = await response.text();
+                    console.log('Response:', text);
+
+                    // Handle the response as JSON if possible
+                    try {
+                        const data = JSON.parse(text);
+                        console.log('Parsed JSON:', data);
+
+                        if (data.message) {
+                            alert(data.message); // Display any message from the server
+                        }
+
+                        fetchRedisKeys(); // Refresh the table after deletion
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        alert('Error parsing JSON: ' + error.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting all keys:', error);
+                    alert('Error deleting all keys: ' + error.message);
+                }
+            }
+        }
+
+        function copyToClipboard(text) {
+            // Remove the prefix "license-server-data:LicenseKey:" if present
+            const prefix = 'LCT:LicenseKey:';
+            const cleanedText = text.startsWith(prefix) ? text.substring(prefix.length) : text;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = cleanedText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert(`Copied key "${cleanedText}" to clipboard`);
+        }
+
+        showTable();
+        document.querySelector('.button-container button').onclick = openLicenseForm;
+
+        // Update form submit event listener
+        document.getElementById('licenseForm').addEventListener('submit', submitLicenseForm);
+
+
+        // Update existing createLicense button click handler
+
+
+    </script>
+</body>
+
+</html>

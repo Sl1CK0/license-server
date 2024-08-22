@@ -1,9 +1,14 @@
 "use strict";
 const LocalStrategy = require('passport-local').Strategy;
+const fs = require('fs');
 const axios = require("axios");
 const express = require("express");
 const cors = require("cors");
 const session = require('express-session');
+const fetch = require('node-fetch');
+const md = require("machine-digest");
+const path = require('path');
+const bodyParser = require('body-parser');
 const passport = require('passport');
 const redis = require("redis");
 const bcrypt = require('bcrypt');
@@ -11,6 +16,7 @@ const config = require("../config");
 const utils = require("./utils");
 const logger = require("./logger");
 const errors = require("./errors");
+const publicKeyPath = path.join(__dirname, "sample.public.pem");
 const { LicenseKey } = require("./model");
 
 const app = express();
@@ -21,7 +27,7 @@ app.use(cors());
 const client = redis.createClient({
   host: "localhost",
   port: 6379,
-});
+}); 
 client.on("connect", () => {
   console.log("Connected to Redis");
 });
@@ -29,7 +35,20 @@ client.on("error", (err) => {
   console.error("Redis error:", err);
 });
 
+let PublicKey;    
+// Initialize PublicKey
+try {
+  const publicKeyBuffer = fs.readFileSync(publicKeyPath);
+  PublicKey = publicKeyBuffer.toString("utf8");
+  logger.info("Public key loaded successfully.");
+} catch (err) {
+  logger.error(`Failed to read public key file: ${err.message}`);
+  process.exit(1); // Exit process if reading fails
+}
 // Express middleware
+app.use(cors()); // Enable CORS
+app.use(express.static('public'));
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session({
@@ -82,45 +101,6 @@ passport.deserializeUser((username, done) => {
   });
 });
 
-// Handle License Function{validation part}
-async function handleLicense(req, res) {
-  const { key, id: machine } = req.body;
-  console.log("Processing key:", key);
-  if (!utils.attrsNotNull(req.body, ["key", "id"])) {
-    return res.json({ status: errors.BAD_REQUEST });
-  }
-  const data = LicenseKey.validate(key);
-  if (!data) return res.json({ status: errors.INVALID_INPUT });
-
-  if (!config.stateless) {
-    const licenseKey = await LicenseKey.fetch(key);
-    console.log("validated and fetched")
-    if (!licenseKey || licenseKey.revoked == 1) {
-      logger.error(`Failed to check the license key in database: ${key}`);
-      return res.json({ status: errors.NULL_DATA });
-    }
-
-    let success = await LicenseKey.authorize(key, machine);
-    if (licenseKey.machine === machine) success = true;
-    console.log("authorized")
-    if (!success) {
-      logger.error(`Used key encountered: ${key}, ${machine}`);
-      return res.json({ status: errors.DUPLICATE_DATA });
-    }
-  }
-  const license = LicenseKey.generateLicense(key, machine);
-  console.log("generated")
-  return res.json({ status: errors.SUCCESS, license });
-
-}
-//validation  
-app.get("/license", (req, res) => {
-  console.log('Rendering license page');
-  res.render("license", { message: "" });
-});
-app.post("/v1/license", handleLicense);
-
-
 // Routes from index.js{issue part}
 app.get("/issue", (req, res) => {
   console.log('Rendering issue page');
@@ -150,7 +130,7 @@ app.post("/issue", async (req, res) => {
 app.get('/', (req, res) => {
   if (req.isAuthenticated()) {
     console.log('User authenticated, rendering index.html');
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/public/index.html');
   } else {
     console.log('User not authenticated, redirecting to login');
     res.redirect('/login');
@@ -160,7 +140,7 @@ app.get('/', (req, res) => {
 //login route
 app.get('/login', (req, res) => {
   console.log('Rendering login.html');
-  res.sendFile(__dirname + '/login.html');
+  res.sendFile(__dirname + '/public/login.html');
 });
 
 app.post('/login',
@@ -174,7 +154,7 @@ app.post('/login',
 //signup route
 app.get('/signup', (req, res) => {
   console.log('Rendering signup.html');
-  res.sendFile(__dirname + '/signup.html');
+  res.sendFile(__dirname + '/public/signup.html');
 });
 
 app.post('/signup', (req, res) => {
@@ -250,19 +230,67 @@ app.get('/user', (req, res) => {
 // Fetch Redis keys and display
 app.get("/api/redis/keys", (req, res) => {
   console.log('Fetching Redis keys');
-  client.keys("license-server-data:LicenseKey:*", (err, keys) => {
+  client.keys("LCT:LicenseKey:*", async (err, keys) => {
     if (err) {
       console.error("Error fetching Redis keys:", err);
       return res.status(500).json({ error: "Failed to fetch Redis keys" });
     }
+    try {
+      const keysWithDetails = await Promise.all(keys.map(async (key) => {
+        return new Promise((resolve) => {
+          client.hgetall(key, (err, keyData) => {
+            if (err) {
+              console.error(`Error fetching data for key ${key}:`, err);
+              return resolve({
+                key,
+                hasMachine: false,
+                issueDate: 'N/A',
+                startDate: 'N/A',
+                endDate: 'N/A'
+              });
+            }
 
-    console.log("Redis keys:", keys);
-    res.json({ keys });
+            // Log the fetched data for debugging purposes
+            console.log(`Fetched key data for ${key}:`, keyData);
+
+            // Resolve with all necessary fields
+            resolve({
+              key,
+              hasMachine: keyData && keyData.machine ? true : false,
+              issueDate: keyData.issueDate || 'N/A',
+              startDate: keyData.startDate || 'N/A',
+              endDate: keyData.endDate || 'N/A'
+            });
+          });
+        });
+      }));
+
+      console.log("Redis keys with detailed data:", keysWithDetails);
+      res.json({ keys: keysWithDetails });
+    } catch (error) {
+      console.error("Error processing Redis keys:", error);
+      res.status(500).json({ error: "Failed to process Redis keys" });
+    }
   });
 });
 
 // Send create request - Adjusted to use local routes
 app.post("/api/create-license", async (req, res) => {
+  const { name, startDate, endDate, persist } = req.body;
+
+  const currentDate = Date.now();
+
+  // Validation checks
+  if (startDate < currentDate) {
+      return res.status(400).json({ error: "Start date cannot be less than the current date." });
+  }
+  if (endDate < currentDate) {
+      return res.status(400).json({ error: "End date cannot be less than the current date." });
+  }
+  if (endDate < startDate) {
+      return res.status(400).json({ error: "End date cannot be earlier than the start date." });
+  }
+
   try {
     const options = req.body;
     console.log('Creating license with options:', options);
@@ -293,7 +321,7 @@ app.delete("/api/redis/keys/:keyName", (req, res) => {
 // Delete all keys
 app.delete("/api/redis/keys", (req, res) => {
   console.log('Deleting all Redis keys');
-  client.keys("license-server-data:LicenseKey:*", (err, keys) => {
+  client.keys("LCT:LicenseKey:*", (err, keys) => {
     if (err) {
       console.error("Error fetching Redis keys:", err);
       return res.status(500).json({ error: "Failed to fetch Redis keys" });
@@ -319,6 +347,57 @@ app.delete("/api/redis/keys", (req, res) => {
   });
 });
 
+
+// Handle License Function{validation part}
+async function handleLicense(req) {
+  const { key, id: machine } = req.body;
+  console.log("Processing key:", key);
+
+  if (!utils.attrsNotNull(req.body, ["key", "id"])) {
+    return { status: errors.BAD_REQUEST };
+  }
+
+  const data = LicenseKey.validate(key);
+  if (!data) return { status: errors.INVALID_INPUT };
+
+  if (!config.stateless) {
+    const licenseKey = await LicenseKey.fetch(key);
+    console.log("Validated and fetched");
+
+    if (!licenseKey || licenseKey.revoked == 1) {
+      logger.error(`Failed to check the license key in database: ${key}`);
+      return { status: errors.NULL_DATA };
+    }
+
+    let success = await LicenseKey.authorize(key, machine);
+    if (licenseKey.machine === machine) success = true;
+    console.log("Authorized");
+
+    if (!success) {
+      logger.error(`Used key encountered: ${key}, ${machine}`);
+      return { status: errors.DUPLICATE_DATA };
+    }
+  }
+
+  const license = LicenseKey.generateLicense(key, machine);
+  console.log("Generated");
+  return { status: errors.SUCCESS, license, hasMachine: !!machine };
+}
+
+
+app.get("/license", (req, res) => {
+  console.log('Rendering license page');
+  res.render("license", { message: "" });
+});
+
+// License validation endpoint
+app.post("/v1/license", async (req, res) => {
+  const result = await handleLicense(req);
+  res.json(result);
+});
+
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+  

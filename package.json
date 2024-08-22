@@ -22,8 +22,8 @@
     "licensing",
     "permission"
   ],
-  "author": "stefanliu@outlook.com",
-  "license": "ISC",
+  "author": "THEBEST000024@GMAIL.COM",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Sl1CK0/license-server/issues"
   },
@@ -49,6 +49,7 @@
     "express-session": "^1.18.0",
     "redis": "^3.1.2",
     "redis-async-wrapper": "0.0.5",
+    "sweetalert2": "^11.12.4",
     "winston": "^3.0.0-rc5"
   },
   "directories": {

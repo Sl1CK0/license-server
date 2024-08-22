@@ -12,15 +12,15 @@ class Handler {
   async handleLicense(req, res) {
     const { key, id: machine } = req.body;
     console.log("Processing key:", key);
-    if (!utils.attrsNotNull(req.body, ["key", "id"])) 
-    return res.json({ status: errors.BAD_REQUEST });
+    if (!utils.attrsNotNull(req.body, ["key", "id"]))
+      return res.json({ status: errors.BAD_REQUEST });
     console.log("a");
     const data = LicenseKey.validate(key);
     if (!data) return res.json({ status: errors.INVALID_INPUT, Ping: "strig" });
     if (!config.stateless) {
       console.log("b");
       const licenseKey = await LicenseKey.fetch(key);
-      console.log(key)
+      console.log(key);
       if (!licenseKey || licenseKey.revoked == 1) {
         console.log("d");
         logger.error(`Failed to check the license key in database: ${key}`);
@@ -33,16 +33,14 @@ class Handler {
       if (licenseKey.machine === machine) success = true;
       console.log("licenseKey.machine === machine) success = true");
       if (!success) {
-        
         logger.error(`Used key encountered: ${key}, ${machine}`);
         return res.json({ status: errors.DUPLICATE_DATA });
       }
     }
     const license = LicenseKey.generateLicense(key, machine);
-    console.log("generetate", license)
+    console.log("generetate", license);
     return res.json({ status: errors.SUCCESS, license });
   }
-
 
   async revoke(req, res) {
     const { key } = req.body;

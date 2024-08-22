@@ -19,6 +19,7 @@
         "express-session": "^1.18.0",
         "redis": "^3.1.2",
         "redis-async-wrapper": "0.0.5",
+        "sweetalert2": "^11.12.4",
         "winston": "^3.0.0-rc5"
       },
       "devDependencies": {
@@ -4670,6 +4671,15 @@
         "node": ">=4"
       }
     },
+    "node_modules/sweetalert2": {
+      "version": "11.12.4",
+      "resolved": "https://registry.npmjs.org/sweetalert2/-/sweetalert2-11.12.4.tgz",
+      "integrity": "sha512-ZSpyaLbAmn4b7xjnV9x9BFD1UOrCAhIzm1D8dZ443kGxtVKqbTIA5SgXs4xeEtmFfEXUyC3RBgpSlu1AXmCiHA==",
+      "funding": {
+        "type": "individual",
+        "url": "https://github.com/sponsors/limonte"
+      }
+    },
     "node_modules/table": {
       "version": "5.4.6",
       "resolved": "https://registry.npmjs.org/table/-/table-5.4.6.tgz",
@@ -8988,6 +8998,11 @@
       "requires": {
         "has-flag": "^3.0.0"
       }
+    },
+    "sweetalert2": {
+      "version": "11.12.4",
+      "resolved": "https://registry.npmjs.org/sweetalert2/-/sweetalert2-11.12.4.tgz",
+      "integrity": "sha512-ZSpyaLbAmn4b7xjnV9x9BFD1UOrCAhIzm1D8dZ443kGxtVKqbTIA5SgXs4xeEtmFfEXUyC3RBgpSlu1AXmCiHA=="
     },
     "table": {
       "version": "5.4.6",
