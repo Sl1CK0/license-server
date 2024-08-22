@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/devfans/node-license-server.git"
+    "url": "git+https://github.com/Sl1CK0/license-server"
   },
   "keywords": [
     "license",
@@ -25,7 +25,7 @@
   "author": "stefanliu@outlook.com",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/devfans/node-license-server/issues"
+    "url": "https://github.com/Sl1CK0/license-server/issues"
   },
   "devDependencies": {
     "after": "0.8.2",
@@ -37,7 +37,7 @@
     "node-fetch": "^2.1.2",
     "supertest": "^4.0.2"
   },
-  "homepage": "https://github.com/devfans/node-license-server#readme",
+  "homepage": "https://github.com/Sl1CK0/license-server#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
