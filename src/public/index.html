@@ -370,27 +370,27 @@
         </div>
     </div>
     <script>document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-    
-        // Set the min attribute for startDate and endDate
-        document.getElementById('startDate').setAttribute('min', today);
-        document.getElementById('endDate').setAttribute('min', today);
-    
-        // Optionally, you can also set the startDate's min date to the same as the endDate's min date if needed
-        document.getElementById('endDate').addEventListener('change', function() {
-            const startDate = document.getElementById('startDate');
-            if (new Date(this.value) > new Date(startDate.value)) {
-                startDate.setAttribute('max', this.value);
-            }
+            const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+            // Set the min attribute for startDate and endDate
+            document.getElementById('startDate').setAttribute('min', today);
+            document.getElementById('endDate').setAttribute('min', today);
+
+            // Optionally, you can also set the startDate's min date to the same as the endDate's min date if needed
+            document.getElementById('endDate').addEventListener('change', function () {
+                const startDate = document.getElementById('startDate');
+                if (new Date(this.value) > new Date(startDate.value)) {
+                    startDate.setAttribute('max', this.value);
+                }
+            });
+
+            document.getElementById('startDate').addEventListener('change', function () {
+                const endDate = document.getElementById('endDate');
+                if (new Date(this.value) > new Date(endDate.value)) {
+                    endDate.setAttribute('min', this.value);
+                }
+            });
         });
-    
-        document.getElementById('startDate').addEventListener('change', function() {
-            const endDate = document.getElementById('endDate');
-            if (new Date(this.value) > new Date(endDate.value)) {
-                endDate.setAttribute('min', this.value);
-            }
-        });
-    });
     </script>
 
     <table id="keysTable">
@@ -591,17 +591,17 @@
 
             const startDateTimestamp = new Date(startDate).getTime();
             const endDateTimestamp = new Date(endDate).getTime();
-            const currentDateTimestamp = Date.now();
+            const issueDateTimestamp = Date.now(); // Issue date is the current date
 
-            if (startDateTimestamp < currentDateTimestamp) {
-                alert("Start date cannot be less than the current date.");
-                return;
+            // Adjust the start date if it's earlier than the issue date
+            let adjustedStartDateTimestamp = startDateTimestamp;
+            if (startDateTimestamp < issueDateTimestamp) {
+                adjustedStartDateTimestamp = issueDateTimestamp;
+                alert("Issue date is same as start date ... Key generated is active");
             }
-            if (endDateTimestamp < currentDateTimestamp) {
-                alert("End date cannot be less than the current date.");
-                return;
-            }
-            if (endDateTimestamp < startDateTimestamp) {
+
+            // Validate the end date
+            if (endDateTimestamp < adjustedStartDateTimestamp) {
                 alert("End date cannot be earlier than the start date.");
                 return;
             }
@@ -612,7 +612,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: licenseName,
-                        startDate: startDateTimestamp,
+                        startDate: adjustedStartDateTimestamp,
                         endDate: endDateTimestamp,
                         persist: persist
                     })

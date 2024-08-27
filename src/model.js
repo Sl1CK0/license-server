@@ -68,7 +68,7 @@
     const meta = {
       identity: config.identity || "Software",
       persist: options.persist ? 1 : 0,
-      startDate: options.startDate ? new Date(options.startDate).getTime() : Date.now(),
+      startDate: options.startDate ? new Date(options.startDate).getTime() : Date.now() || Date.now() ,  
       endDate: options.endDate ? new Date(options.endDate).getTime() : Date.now() + config.expireAfter,
       issueDate: Date.now(),
     };

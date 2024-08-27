@@ -16,7 +16,7 @@ const config = require("../config");
 const utils = require("./utils");
 const logger = require("./logger");
 const errors = require("./errors");
-const publicKeyPath = path.join(__dirname, "sample.public.pem");
+const publicKeyPath = path.join(__dirname,"..","sample.public.pem");
 const { LicenseKey } = require("./model");
 
 const app = express();
@@ -281,9 +281,6 @@ app.post("/api/create-license", async (req, res) => {
   const currentDate = Date.now();
 
   // Validation checks
-  if (startDate < currentDate) {
-      return res.status(400).json({ error: "Start date cannot be less than the current date." });
-  }
   if (endDate < currentDate) {
       return res.status(400).json({ error: "End date cannot be less than the current date." });
   }
