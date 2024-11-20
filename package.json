@@ -39,6 +39,7 @@
   },
   "homepage": "https://github.com/Sl1CK0/license-server#readme",
   "dependencies": {
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "connect-redis": "^7.1.1",
@@ -47,6 +48,8 @@
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
     "redis": "^3.1.2",
     "redis-async-wrapper": "0.0.5",
     "sweetalert2": "^11.12.4",

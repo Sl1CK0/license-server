@@ -343,7 +343,7 @@
     </script>
 
     <div class="button-container">
-        <button onclick="createLicense()">Create License</button>
+        <button onclick="createLicense()">Create Key</button>
         <button onclick="deleteAllKeys()">Delete All Keys</button>
 
     </div>
@@ -365,7 +365,7 @@
                 <label for="persist">Persist:</label>
                 <input type="checkbox" id="persist" name="persist"><br><br>
 
-                <button type="submit" onclick="submitLicenseForm(event)">Create License</button>
+                <button type="submit" onclick="submitLicenseForm(event)">Create Key</button>
             </form>
         </div>
     </div>
@@ -414,21 +414,26 @@
         function formatDate(timestamps) {
             // Parse the input string into a Date object
             const date = new Date(Number(timestamps));
-            console.log("date is", date, timestamps)
             // Check if the date is valid
-            if (!date.getTime()) {
+            if (isNaN(date.getTime())) {
                 return {
                     error: 'Invalid date format'
                 };
             }
 
-            // Convert to Unix and Epoch timestamps
-            let year = date.getFullYear();
-            let month = date.getMonth();
-            let day = date.getDate();
-            return `${day}-${month + 1}-${year}`;
+            // Get the day of the week as a string
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = days[date.getDay()];
 
+            // Convert to readable date format
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // Months are 0-based, so add 1
+            const day = date.getDate();
+
+            // Return formatted date with day of the week
+            return `${day}-${month}-${year}`;
         }
+
         async function fetchRedisKeys() {
             try {
                 const response = await fetch('http://localhost:3002/api/redis/keys');
@@ -440,8 +445,7 @@
                     const keysTable = document.getElementById('keysTable').getElementsByTagName('tbody')[0];
                     keysTable.innerHTML = '';  // Clear existing rows
 
-                    const currentDate = new Date().getTime(); // Get the current timestamp
-                    const ping = formatDate(currentDate);
+                    const currentDate = Date.now(); // Get the current timestamp
 
                     keys.forEach((keyData, index) => {
                         const row = keysTable.insertRow();
@@ -471,31 +475,31 @@
                         } else {
                             keyClass = 'license-key-active';
                             row.classList.add('row-active');
-
-
                         }
+
                         // Set license key with highlighting if needed
                         cellLicenseKey.textContent = keyData.key;
                         cellLicenseKey.className = `license-key ${keyClass}`;
                         cellLicenseKey.title = keyData.key;
 
-                        // Convert and display timestamps
+                        // Convert and display timestamps with hover title
                         const issueDateFormatted = formatDate(keyData.issueDate);
                         const startDateFormatted = formatDate(keyData.startDate);
                         const endDateFormatted = formatDate(keyData.endDate);
-                        console.log("bih", startDateFormatted);
-                        console.log("bia", currentDate);
-                        console.log("big", ping);
-                        console.log("hi", ping < startDateFormatted);
-
                         cellIssueDate.textContent = issueDateFormatted;
+                        cellIssueDate.title = new Date(Number(keyData.issueDate)).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+
                         cellStartDate.textContent = startDateFormatted;
+                        cellStartDate.title = new Date(Number(keyData.startDate)).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+
                         cellEndDate.textContent = endDateFormatted;
+                        cellEndDate.title = new Date(Number(keyData.endDate)).toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
+
 
                         // Determine and display status
                         let statusText = '';
                         let statusClass = '';
-                        if (startDateFormatted > ping) {
+                        if (keyData.startDate > currentDate) {
                             statusText = 'Inactive';
                             statusClass = 'status-inactive';
                         } else if (keyData.endDate < currentDate) {
